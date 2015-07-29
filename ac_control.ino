@@ -11,8 +11,11 @@
 
 IRsend irSend = IRsend(D0);
 
+unsigned long timeout = 5 * 60 * 1000; // 5 minutes
+
 int togglePower(String command) {
   irSend.sendNEC(0x10AF8877, 32);
+  return 0;
 }
 
 void setup() {
@@ -20,4 +23,7 @@ void setup() {
 }
 
 void loop() {
+  if (millis() > timeout) {
+    System.reset();
+  }
 }
