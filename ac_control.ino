@@ -11,7 +11,17 @@
 
 IRsend irSend = IRsend(D0);
 
-unsigned long timeout = 5 * 60 * 1000; // 5 minutes
+unsigned long listen_floor = 1000 * 10; // 10 seconds
+
+// Occasionally, the Blue Flash of Death will prevent any user code from executing
+// Intercept any listening events after system start, and reset to break the infinite loop
+void maybe_break_listen(system_event_t event, uint32_t param, void* pointer) {
+  if (event == wifi_listen_begin) {
+    if (millis() > listen_floor) {
+      System.reset();
+    }
+  }
+}
 
 int togglePower(String command) {
   irSend.sendNEC(0x10AF8877, 32);
@@ -19,11 +29,9 @@ int togglePower(String command) {
 }
 
 void setup() {
-  Spark.function("power", togglePower);
+  Particle.function("power", togglePower);
+  System.on(wifi_listen, maybe_break_listen);
 }
 
 void loop() {
-  if (millis() > timeout) {
-    System.reset();
-  }
 }
